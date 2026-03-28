@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -7,36 +7,49 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Estado para o Card de Mensagem
+  const [message, setMessage] = useState({ text: '', type: '' }); // type: 'success' ou 'error'
+
   const router = useRouter();
   const supabase = createClient();
+
+  // Efeito para sumir a mensagem após 4 segundos
+  useEffect(() => {
+    if (message.text) {
+      const timer = setTimeout(() => setMessage({ text: '', type: '' }), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // Consulta a tabela 'register' em busca do usuário
     const { data, error } = await supabase
-      .from('register')
+      .from('users')
       .select('*')
       .eq('email', email)
       .eq('senha', password) 
       .single(); 
 
     if (error || !data) {
-      alert('Erro ao entrar: E-mail ou senha incorretos.');
+      setMessage({ text: 'E-mail ou senha incorretos. Tente novamente.', type: 'error' });
       console.error('Detalhes do erro:', error);
     } else {
-      alert(`Bem-vindo de volta, ${data.nome}!`);
+      setMessage({ text: `Bem-vindo de volta, ${data.nome}! Redirecionando...`, type: 'success' });
       
-      // Armazena os dados básicos para identificar o usuário logado
       localStorage.setItem('user', JSON.stringify({
         id: data.id,
         nome: data.nome,
         email: data.email
       }));
 
-      router.push('/initialpage'); 
-      router.refresh();
+      // Pequeno delay para o usuário ver a mensagem de sucesso antes de mudar de página
+      setTimeout(() => {
+        router.push('/initialpage'); 
+        router.refresh();
+      }, 1500);
     }
     setLoading(false);
   };
@@ -47,6 +60,23 @@ export default function LoginPage() {
       style={{ backgroundImage: "url('/fundo_register.png')" }}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"></div>
+
+      {/* --- CARD DE MENSAGEM (TOAST) --- */}
+      {message.text && (
+        <div className={`fixed top-10 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl border backdrop-blur-xl shadow-2xl transition-all duration-500 animate-in fade-in zoom-in slide-in-from-top-10 
+          ${message.type === 'success' 
+            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' 
+            : 'bg-red-500/20 border-red-500/50 text-red-400'}`}>
+          <div className="flex items-center gap-3">
+            {message.type === 'success' ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            )}
+            <p className="text-xs uppercase tracking-[0.2em] font-bold">{message.text}</p>
+          </div>
+        </div>
+      )}
 
       <div className="relative z-10 w-full max-w-md p-10 mx-4 bg-black/40 backdrop-blur-md rounded-[2.5rem] border border-white/10 shadow-2xl">
         

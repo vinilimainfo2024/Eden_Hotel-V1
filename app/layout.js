@@ -1,22 +1,21 @@
-import { Montserrat } from "next/font/google"; // Importando a fonte
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 
-// Configurando a fonte
 const montserrat = Montserrat({ 
   subsets: ["latin"],
-  weight: ['300', '400', '700', '900'], // Pesos: leve, normal, negrito e extra-negrito
+  weight: ['300', '400', '700', '900'],
   variable: '--font-montserrat',
+  display: 'swap',
 });
 
 export const metadata = {
-  title: "EdenHotel",
-  description: "Reserva de luxo",
+  title: "EdenHotel | Luxury Experience",
+  description: "Onde a sofisticação encontra o paraíso.",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt-br">
-      {/* Aplicamos a classe da fonte no body */}
+    <html lang="pt-br" className={montserrat.variable}>
       <body className={`${montserrat.className} antialiased`}>
         {children}
       </body>
